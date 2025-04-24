@@ -1,4 +1,4 @@
-[gd_scene load_steps=25 format=3 uid="uid://cwhpy8mwx2xao"]
+[gd_scene load_steps=31 format=3 uid="uid://cwhpy8mwx2xao"]
 
 [ext_resource type="Script" uid="uid://hqloy5qy3o61" path="res://Chunk.gd" id="1_lexys"]
 [ext_resource type="Shader" uid="uid://bpwnc8pfgalf5" path="res://Chunk.gdshader" id="2_s3wkh"]
@@ -75,35 +75,50 @@ shader_parameter/metallic = 0.0
 shader_parameter/world_uv_scale = 0.1
 
 [sub_resource type="Gradient" id="Gradient_811cv"]
-colors = PackedColorArray(0.281186, 0.281187, 0.281187, 1, 0, 0, 0, 1)
 
 [sub_resource type="FastNoiseLite" id="FastNoiseLite_qtmie"]
-frequency = 1.0
+seed = -90
 
 [sub_resource type="NoiseTexture2D" id="NoiseTexture2D_dw44g"]
-seamless = true
 color_ramp = SubResource("Gradient_811cv")
 noise = SubResource("FastNoiseLite_qtmie")
+
+[sub_resource type="Gradient" id="Gradient_7cxre"]
+
+[sub_resource type="FastNoiseLite" id="FastNoiseLite_05o6f"]
+seed = -80
+
+[sub_resource type="NoiseTexture2D" id="NoiseTexture2D_ni86q"]
+color_ramp = SubResource("Gradient_7cxre")
+noise = SubResource("FastNoiseLite_05o6f")
+
+[sub_resource type="Gradient" id="Gradient_beg16"]
+
+[sub_resource type="FastNoiseLite" id="FastNoiseLite_x4yda"]
+seed = -80
+
+[sub_resource type="NoiseTexture2D" id="NoiseTexture2D_a0qwu"]
+color_ramp = SubResource("Gradient_beg16")
+noise = SubResource("FastNoiseLite_x4yda")
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_fbyps"]
 render_priority = 0
 shader = ExtResource("3_r8y4k")
-shader_parameter/albedo = Color(0, 0.610194, 0.901729, 1)
-shader_parameter/albedo_texture_size = Vector2i(0, 0)
-shader_parameter/point_size = 1.0
+shader_parameter/depth_fade_distance = 1.0
+shader_parameter/absorbance = 2.0
+shader_parameter/shallow_color = Color(0.22, 0.66, 1, 1)
+shader_parameter/deep_color = Color(0, 0.25, 0.45, 1)
+shader_parameter/foam_amount = 0.2
+shader_parameter/foam_color = Color(1, 1, 1, 1)
 shader_parameter/roughness = 0.17
-shader_parameter/metallic_texture_channel = Vector4(1, 0, 0, 0)
-shader_parameter/specular = 0.5
-shader_parameter/metallic = 0.0
-shader_parameter/texture_normal = SubResource("NoiseTexture2D_dw44g")
-shader_parameter/normal_scale = 1.0
-shader_parameter/uv1_scale = Vector3(1, 1, 1)
-shader_parameter/uv1_offset = Vector3(0, 0, 0)
-shader_parameter/uv2_scale = Vector3(1, 1, 1)
-shader_parameter/uv2_offset = Vector3(0, 0, 0)
-shader_parameter/time_scale = 0.2
-shader_parameter/normal_contrast_min = 0.4
-shader_parameter/normal_contrast_max = 0.5
+shader_parameter/wave_texture = SubResource("NoiseTexture2D_a0qwu")
+shader_parameter/wave_scale = 4.0
+shader_parameter/height_scale = 0.15
+shader_parameter/normal1 = SubResource("NoiseTexture2D_dw44g")
+shader_parameter/wave_dir1 = Vector2(1, 0)
+shader_parameter/normal2 = SubResource("NoiseTexture2D_ni86q")
+shader_parameter/wave_dir2 = Vector2(0, 1)
+shader_parameter/wave_speed = 0.015
 
 [node name="Chunk" type="Node3D" node_paths=PackedStringArray("mesh_instance", "collision_shape", "water_mesh_instance")]
 script = ExtResource("1_lexys")

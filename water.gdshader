@@ -1,68 +1,82 @@
-// NOTE: Shader automatically converted from Godot Engine 4.4.stable's StandardMaterial3D.
 shader_type spatial;
-render_mode blend_mix, depth_draw_opaque, cull_back, diffuse_burley, specular_schlick_ggx;
-uniform vec4 albedo : source_color;
-uniform sampler2D texture_albedo : source_color, filter_linear_mipmap, repeat_enable;
-uniform ivec2 albedo_texture_size;
-uniform float point_size : hint_range(0.1, 128.0, 0.1);
-uniform float roughness : hint_range(0.0, 1.0);
-uniform sampler2D texture_metallic : hint_default_white, filter_linear_mipmap, repeat_enable;
-uniform vec4 metallic_texture_channel;
-uniform sampler2D texture_roughness : hint_roughness_r, filter_linear_mipmap, repeat_enable;
-uniform float specular : hint_range(0.0, 1.0, 0.01);
-uniform float metallic : hint_range(0.0, 1.0, 0.01);
-uniform sampler2D texture_normal : hint_roughness_normal, filter_linear_mipmap, repeat_enable;
-uniform float normal_scale : hint_range(-16.0, 16.0);
-uniform vec3 uv1_scale;
-uniform vec3 uv1_offset;
-uniform vec3 uv2_scale;
-uniform vec3 uv2_offset;
-uniform float time_scale : hint_range(0.1, 5.0) = 1.0;
-uniform float normal_contrast_min : hint_range(0.01, 5.0) = 0.3; 
-uniform float normal_contrast_max : hint_range(0.01, 5.0) = 0.3; 
+render_mode cull_disabled;
+uniform sampler2D DEPTH_TEXTURE : hint_depth_texture, repeat_disable, filter_nearest; 
 
-void vertex() {
-	UV = UV * uv1_scale.xy + uv1_offset.xy;
+uniform float depth_fade_distance : hint_range(0.0, 10.0) = 1.0;
+uniform float absorbance : hint_range(0.0, 10.0) = 2.0;
+
+uniform vec3 shallow_color : source_color = vec3(0.22, 0.66, 1.0);
+uniform vec3 deep_color : source_color = vec3(0.0, 0.25, 0.45);
+
+uniform float foam_amount : hint_range(0.0, 2.0) = 0.2;
+uniform vec3 foam_color : source_color = vec3(1);
+uniform sampler2D foam_noise : hint_default_white;
+
+uniform float roughness : hint_range(0.0, 1.0) = 0.05;
+
+uniform sampler2D wave_texture;
+uniform float wave_scale = 4.0;
+uniform float height_scale = 0.15;
+varying float wave_height;
+varying vec3 uv_world_pos;
+
+uniform sampler2D normal1;
+uniform vec2 wave_dir1 = vec2(1.0, 0.0);
+uniform sampler2D normal2;
+uniform vec2 wave_dir2 = vec2(0.0, 1.0);
+uniform float wave_speed : hint_range(0.0, 0.2) = 0.015;
+
+vec3 screen(vec3 base, vec3 blend){
+	return 1.0 - (1.0 - base) * (1.0 - blend);
 }
 
-void fragment() {
-	// Base UV coordinates
-	vec2 base_uv = UV;
+void vertex() {
+	// Vertext displacement for waves
+	uv_world_pos = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
+	wave_height = texture(wave_texture, uv_world_pos.xz / wave_scale + TIME * wave_speed*0.2).r;
+	VERTEX.y += wave_height * height_scale;
+}
+
+void fragment()
+{
+	// Depth texture magic
+	float depth = texture(DEPTH_TEXTURE, SCREEN_UV, 0.0).r;
+  	vec3 ndc = vec3(SCREEN_UV * 2.0 - 1.0, depth);
+	vec4 world = INV_VIEW_MATRIX * INV_PROJECTION_MATRIX * vec4(ndc, 1.0);
+	float depth_texture_y = world.y / world.w;
+	float vertex_y = (INV_VIEW_MATRIX * vec4(VERTEX, 1.0)).y;
+	float vertical_depth = vertex_y - depth_texture_y;
 	
-	// Moving UV - only using sine for vertical movement
-	vec2 moving_uv = base_uv + vec2(0.0, TIME * time_scale * 0.02);
+	// Changes the color of geometry behind it as the water gets deeper
+	float depth_fade_blend = exp(-vertical_depth / depth_fade_distance);
+	depth_fade_blend = clamp(depth_fade_blend, 0.0, 1.0);
 	
-	// Get normal map from texture
-	vec3 normal_map_value = texture(texture_normal, moving_uv).rgb;
+	// Makes the water more transparent as it gets more shallow
+	float alpha_blend = -vertical_depth * absorbance;
+	alpha_blend = clamp(1.0 - exp(alpha_blend), 0.0, 1.0);
 	
-	// Manipulate the normal map "heights" by changing contrast over time
-	// This will make the bumps appear more pronounced and then flatter in a cycle
-	float contrast = mix(normal_contrast_min, normal_contrast_max, (sin(TIME * time_scale) + 1.0) * 0.5);
+	// Small layer of foam
+	float foam_blend = clamp(1.0 - (vertical_depth / foam_amount), 0.0, 1.0);
+	vec3 foam = foam_blend * foam_color;
 	
-	// Apply contrast to normal map (convert from 0-1 to -1 to 1 space, apply contrast, convert back)
-	vec2 xy = normal_map_value.xy * 2.0 - 1.0; // Convert from 0-1 to -1 to 1 space
-	xy = xy * contrast; // Apply contrast
-	xy = clamp(xy, -1.0, 1.0); // Clamp to valid range
-	xy = xy * 0.5 + 0.5; // Convert back to 0-1 space
+	// Mix them all together
+	vec3 color_out = mix(deep_color, shallow_color, depth_fade_blend);
+	color_out = screen(color_out, foam);
 	
-	// Recalculate z component to maintain unit normal
-	float z = sqrt(1.0 - dot(xy * 2.0 - 1.0, xy * 2.0 - 1.0));
-	z = z * 0.5 + 0.5; // Convert to 0-1 space
+	// Normal maps
+	vec2 normal_offset1 = (TIME * wave_dir1) * wave_speed;
+	vec2 normal_offset2 = (TIME * wave_dir2) * wave_speed;
+	vec3 normal_blend = mix(texture(normal1, uv_world_pos.xz / wave_scale + normal_offset1), texture(normal2, uv_world_pos.xz / wave_scale + normal_offset2), 0.5).rgb;
 	
-	// Construct final normal map value
-	normal_map_value = vec3(xy, z);
+	if (FRONT_FACING) {
+		ALPHA = alpha_blend; // Use calculated alpha for front faces
+        //NORMAL_MAP = normal_map_vector; // Use normal map as is for front faces
+	} else {
+		ALPHA = 1.0;
+	}
 	
-	// Apply the basic material properties
-	vec4 albedo_tex = texture(texture_albedo, base_uv);
-	ALBEDO = albedo.rgb * albedo_tex.rgb;
-	float metallic_tex = dot(texture(texture_metallic, base_uv), metallic_texture_channel);
-	METALLIC = metallic_tex * metallic;
-	SPECULAR = specular;
-	vec4 roughness_texture_channel = vec4(1.0, 0.0, 0.0, 0.0);
-	float roughness_tex = dot(texture(texture_roughness, base_uv), roughness_texture_channel);
-	ROUGHNESS = roughness_tex * roughness;
-	
-	// Apply animated normal map
-	NORMAL_MAP = normal_map_value;
-	NORMAL_MAP_DEPTH = normal_scale;
+	ALBEDO = color_out;
+	//ALPHA = alpha_blend;
+	ROUGHNESS = roughness;
+	NORMAL_MAP = normal_blend;
 }

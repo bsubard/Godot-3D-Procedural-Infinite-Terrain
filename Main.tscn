@@ -21,6 +21,7 @@ ambient_light_color = Color(1, 1, 1, 1)
 reflected_light_source = 2
 tonemap_mode = 3
 tonemap_white = 6.0
+fog_enabled = true
 
 [sub_resource type="CameraAttributesPractical" id="CameraAttributesPractical_5vvyt"]
 
@@ -33,21 +34,27 @@ chunk_scene = ExtResource("2_r0du0")
 
 [node name="Player" parent="." instance=ExtResource("2_uu6xs")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 44.3204, 0)
+sky_node_path = NodePath("../Sky3D")
+FOG_TRIGGER_Y = -19.5
+original_fog_density = 0.001
+normal_fog_color = Color(0.497786, 0.506612, 0.516719, 1)
+deep_fog_density = 0.05
+deep_fog_color = Color(0.173291, 0.403723, 1, 1)
 
 [node name="Sky3D" type="WorldEnvironment" parent="."]
 environment = SubResource("Environment_20pc6")
 camera_attributes = SubResource("CameraAttributesPractical_5vvyt")
 script = ExtResource("4_3dxm6")
-current_time = 11.0018
+current_time = 12.8221
 minutes_per_day = 1440.0
 metadata/_custom_type_script = "uid://dgvh88ftvf8ek"
 
 [node name="SunLight" type="DirectionalLight3D" parent="Sky3D"]
-transform = Transform3D(0, -0.979356, 0.202142, 0.637495, 0.155742, 0.75455, -0.770455, 0.128865, 0.624334, 0.202143, 0.75455, 0.624334)
+transform = Transform3D(0, -0.97354, -0.228515, 0.637159, -0.176124, 0.750339, -0.770733, -0.1456, 0.6203, -0.228515, 0.750339, 0.6203)
 shadow_enabled = true
 
 [node name="MoonLight" type="DirectionalLight3D" parent="Sky3D"]
-transform = Transform3D(0, -0.87853, -0.477688, -0.246622, -0.462933, 0.851393, -0.969112, 0.117808, -0.216664, -0.477688, 0.851394, -0.216664)
+transform = Transform3D(0, -0.894552, -0.446964, -0.262395, -0.431302, 0.863208, -0.964961, 0.117281, -0.234726, -0.446963, 0.863208, -0.234726)
 light_color = Color(0.572549, 0.776471, 0.956863, 1)
 light_energy = 0.0
 shadow_enabled = true
@@ -62,8 +69,8 @@ ground_color = Color(0.3, 0.3, 0.3, 1)
 sky_layers = 4
 sky_render_priority = -128
 horizon_level = 0.0
-sun_altitude = -41.014
-sun_azimuth = -162.059
+sun_altitude = -41.3802
+sun_azimuth = -200.223
 sun_disk_color = Color(0.996094, 0.541334, 0.140076, 1)
 sun_disk_intensity = 2.0
 sun_disk_size = 0.015
@@ -71,8 +78,8 @@ sun_light_path = NodePath("../SunLight")
 sun_light_color = Color(1, 1, 1, 1)
 sun_horizon_light_color = Color(0.98, 0.523, 0.294, 1)
 sun_light_energy = 1.0
-moon_altitude = -130.574
-moon_azimuth = -329.142
+moon_altitude = -134.303
+moon_azimuth = -16.2909
 moon_color = Color(1, 1, 1, 1)
 moon_size = 0.07
 enable_set_moon_texture = false
@@ -80,7 +87,7 @@ moon_resolution = 2
 moon_light_path = NodePath("../MoonLight")
 moon_light_color = Color(0.572549, 0.776471, 0.956863, 1)
 moon_light_energy = 0.3
-deep_space_euler = Vector3(1.29154, 3.14159, 1.61)
+deep_space_euler = Vector3(1.29154, 3.14159, 1.09778)
 background_color = Color(0.709804, 0.709804, 0.709804, 0.854902)
 set_background_texture = false
 stars_field_color = Color(1, 1, 1, 1)
@@ -147,8 +154,8 @@ script = ExtResource("6_trn2v")
 dome_path = NodePath("../Skydome")
 system_sync = false
 total_cycle_in_minutes = 1440.0
-total_hours = 11.0018
-day = 1
+total_hours = 12.8221
+day = 3
 month = 1
 year = 2025
 celestials_calculations = 1
