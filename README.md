@@ -6,7 +6,13 @@ Made in Godot 4.4, Scene looks empty until you press play, then it should load t
 Use WASD to move around, space bar to fly up, and shift key to sprint, press T key to change time ahead 1 hour
 
 
-![image](https://github.com/user-attachments/assets/20cd1904-6302-4d87-9be9-e3963dc08d86)
+![tr2](https://github.com/user-attachments/assets/c04dc155-bc90-49d8-a757-c4aeaf5ae2c8)
+
+
+![ev2](https://github.com/user-attachments/assets/158e6159-d747-4bf9-b8c1-8b8b9c5d1e2b)
+
+![uw1](https://github.com/user-attachments/assets/af8b4168-122b-4fe5-8907-477b10f936ff)
+
 
 
 
